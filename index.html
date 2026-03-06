@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>夜の村 - 人狼</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3f;
+    --accent: #c8a96e;
+    --accent2: #7b5ea7;
+    --wolf: #e05c5c;
+    --moon: #f0e6c8;
+    --text: #e8e0d0;
+    --muted: #7a7a9a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Stars background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(1px 1px at 10% 15%, rgba(240,230,200,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 40%, rgba(240,230,200,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 10%, rgba(240,230,200,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 55%, rgba(240,230,200,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 20%, rgba(240,230,200,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 65%, rgba(240,230,200,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 35%, rgba(240,230,200,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 70%, rgba(240,230,200,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 80%, rgba(240,230,200,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 85%, rgba(240,230,200,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 30%, rgba(240,230,200,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 75%, rgba(240,230,200,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 5% 90%, rgba(240,230,200,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 95% 5%, rgba(240,230,200,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 50%, rgba(240,230,200,0.3) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Screens */
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100dvh;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+    animation: fadeIn 0.5s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========= TITLE SCREEN ========= */
+  #screen-title {
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .title-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 30%, rgba(123,94,167,0.15) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 50% 20%, rgba(200,169,110,0.08) 0%, transparent 60%);
+  }
+
+  .moon {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #f8f0d8, #d4c090 60%, #a08040);
+    box-shadow:
+      0 0 40px rgba(200,169,110,0.4),
+      0 0 80px rgba(200,169,110,0.15),
+      inset -15px -10px 30px rgba(0,0,0,0.3);
+    margin-bottom: 32px;
+    animation: moonPulse 4s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes moonPulse {
+    0%, 100% { box-shadow: 0 0 40px rgba(200,169,110,0.4), 0 0 80px rgba(200,169,110,0.15), inset -15px -10px 30px rgba(0,0,0,0.3); }
+    50% { box-shadow: 0 0 60px rgba(200,169,110,0.6), 0 0 120px rgba(200,169,110,0.25), inset -15px -10px 30px rgba(0,0,0,0.3); }
+  }
+
+  .wolf-icon {
+    font-size: 64px;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 0 20px rgba(224,92,92,0.5));
+    animation: wolfBreath 3s ease-in-out infinite;
+  }
+
+  @keyframes wolfBreath {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(224,92,92,0.5)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 30px rgba(224,92,92,0.8)); }
+  }
+
+  .title-main {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: var(--moon);
+    text-shadow: 0 0 30px rgba(200,169,110,0.5);
+    position: relative;
+    z-index: 1;
+    margin-top: 12px;
+  }
+
+  .title-sub {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 14px;
+    letter-spacing: 0.5em;
+    color: var(--muted);
+    margin-top: 8px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .title-divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 28px auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn-play {
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Shippori Mincho', serif;
+    font-size: 20px;
+    letter-spacing: 0.3em;
+    padding: 16px 52px;
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .btn-play::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+
+  .btn-play:active::before { transform: scaleX(1); }
+  .btn-play:active { color: var(--bg); }
+
+  .forest-silhouette {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 160px;
+    background: linear-gradient(to top, #0a0a0f 30%, transparent);
+    z-index: 1;
+  }
+
+  .forest-silhouette svg {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 160px;
+    opacity: 0.7;
+  }
+
+  /* ========= COUNT SCREEN ========= */
+  #screen-count {
+    justify-content: flex-start;
+    padding-top: 60px;
+  }
+
+  .screen-header {
+    text-align: center;
+    margin-bottom: 36px;
+    width: 100%;
+  }
+
+  .screen-label {
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .screen-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--moon);
+  }
+
+  .count-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .btn-count {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-count::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(200,169,110,0.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn-count:active::after { opacity: 1; }
+  .btn-count:active { border-color: var(--accent); transform: scale(0.97); }
+
+  .count-num {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+  }
+
+  .count-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ========= NAME INPUT SCREEN ========= */
+  #screen-names {
+    justify-content: flex-start;
+    padding-top: 60px;
+  }
+
+  .names-list {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .name-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    transition: border-color 0.2s;
+  }
+
+  .name-row:focus-within { border-color: var(--accent); }
+
+  .name-num {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 28px;
+  }
+
+  .name-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 16px;
+    flex: 1;
+    caret-color: var(--accent);
+  }
+
+  .name-input::placeholder { color: var(--muted); font-size: 14px; }
+
+  /* ========= MODE SCREEN ========= */
+  #screen-mode {
+    justify-content: center;
+    gap: 0;
+    padding-top: 60px;
+  }
+
+  .mode-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 360px;
+    margin-top: 36px;
+  }
+
+  .mode-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .mode-card.normal-card::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+  .mode-card.job-card::before { background: linear-gradient(90deg, transparent, var(--accent2), transparent); }
+
+  .mode-card:active { transform: scale(0.97); }
+  .mode-card:active::before { opacity: 1; }
+  .mode-card.normal-card:active { border-color: var(--accent); }
+  .mode-card.job-card:active { border-color: var(--accent2); }
+
+  .mode-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+  .mode-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--moon);
+    margin-bottom: 6px;
+  }
+
+  .mode-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  .mode-badge {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+
+  .badge-standard { color: var(--accent); border-color: var(--accent); }
+  .badge-coming { color: var(--accent2); border-color: var(--accent2); opacity: 0.7; }
+
+  /* ========= BUTTONS ========= */
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    padding: 15px 0;
+    width: 100%;
+    max-width: 360px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+
+  .btn-back {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .btn-back:active { color: var(--text); }
+
+  /* Progress dots */
+  .progress-dots {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+
+  .dot.active { background: var(--accent); }
+  .dot.done { background: var(--accent); opacity: 0.4; }
+
+  /* Scroll container for names */
+  .scroll-area {
+    width: 100%;
+    max-width: 380px;
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 10px;
+  }
+
+  .scroll-area::-webkit-scrollbar { width: 3px; }
+  .scroll-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ========= DEAL PHASE ========= */
+  #screen-deal {
+    justify-content: center;
+    padding: 30px 24px;
+    gap: 0;
+  }
+
+  .deal-progress {
+    position: absolute;
+    top: 24px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+  }
+
+  /* --- PASS STATE --- */
+  .pass-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 0;
+  }
+
+  .pass-icon {
+    font-size: 52px;
+    margin-bottom: 20px;
+    animation: passFloat 2s ease-in-out infinite;
+  }
+
+  @keyframes passFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .pass-instruction {
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .pass-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--moon);
+    margin-bottom: 6px;
+  }
+
+  .pass-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 44px;
+    letter-spacing: 0.1em;
+  }
+
+  .btn-reveal {
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Shippori Mincho', serif;
+    font-size: 16px;
+    letter-spacing: 0.25em;
+    padding: 15px 40px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .btn-reveal:active {
+    background: var(--accent);
+    color: var(--bg);
+    transform: scale(0.97);
+  }
+
+  /* --- ROLE REVEAL STATE --- */
+  .reveal-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    animation: revealPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes revealPop {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .role-card {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 16px;
+    padding: 32px 24px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 28px;
+    border: 1.5px solid;
+  }
+
+  .role-card.citizen {
+    background: linear-gradient(145deg, #1a2a1a, #121a12);
+    border-color: #4a8a4a;
+    box-shadow: 0 0 40px rgba(74,138,74,0.15);
+  }
+
+  .role-card.wolf {
+    background: linear-gradient(145deg, #2a1010, #1a0a0a);
+    border-color: var(--wolf);
+    box-shadow: 0 0 40px rgba(224,92,92,0.2);
+  }
+
+  .role-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .role-card.citizen::before { background: linear-gradient(90deg, transparent, #4a8a4a, transparent); }
+  .role-card.wolf::before { background: linear-gradient(90deg, transparent, var(--wolf), transparent); }
+
+  .role-emoji { font-size: 56px; margin-bottom: 14px; display: block; }
+
+  .role-tag {
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    display: inline-block;
+  }
+
+  .role-card.citizen .role-tag { background: rgba(74,138,74,0.2); color: #7ac07a; border: 1px solid rgba(74,138,74,0.4); }
+  .role-card.wolf .role-tag { background: rgba(224,92,92,0.15); color: #e08080; border: 1px solid rgba(224,92,92,0.3); }
+
+  .role-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 30px;
+    font-weight: 800;
+    margin: 8px 0 14px;
+    display: block;
+  }
+
+  .role-card.citizen .role-name { color: #d0f0d0; }
+  .role-card.wolf .role-name { color: #ffd0d0; }
+
+  .role-desc-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+
+  .role-warning {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+    padding: 10px 16px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    max-width: 300px;
+    text-align: center;
+  }
+
+  .btn-confirm {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-family: 'Shippori Mincho', serif;
+    font-size: 16px;
+    letter-spacing: 0.2em;
+    padding: 15px 0;
+    width: 100%;
+    max-width: 300px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-confirm:active {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: scale(0.97);
+  }
+
+  /* ========= DAY PHASE ========= */
+  #screen-day {
+    justify-content: flex-start;
+    padding-top: 44px;
+  }
+
+  .phase-header {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 28px;
+  }
+
+  .phase-day-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(200,169,110,0.1);
+    border: 1px solid rgba(200,169,110,0.3);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .phase-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--moon);
+  }
+
+  .phase-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .alive-section {
+    width: 100%;
+    max-width: 380px;
+    margin-bottom: 24px;
+  }
+
+  .alive-section-label {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .alive-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .alive-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 14px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .alive-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #4a8;
+    display: inline-block;
+  }
+
+  .day-note {
+    width: 100%;
+    max-width: 380px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  /* ========= VOTE PHASE ========= */
+  #screen-vote {
+    justify-content: flex-start;
+    padding-top: 44px;
+  }
+
+  .voter-pass {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .voter-instruction {
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .voter-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--moon);
+    margin-bottom: 4px;
+  }
+
+  .voter-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .vote-targets {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .btn-vote-target {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+  }
+
+  .btn-vote-target:active {
+    border-color: var(--wolf);
+    background: rgba(224,92,92,0.08);
+    transform: scale(0.98);
+  }
+
+  .vote-target-icon {
+    font-size: 20px;
+    width: 32px;
+    text-align: center;
+  }
+
+  .btn-vote-skip {
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 13px 0;
+    width: 100%;
+    max-width: 380px;
+    color: var(--muted);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-vote-skip:active {
+    border-color: var(--muted);
+    color: var(--text);
+  }
+
+  .vote-progress-bar {
+    width: 100%;
+    max-width: 380px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+
+  .vote-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* ========= EXECUTE RESULT ========= */
+  #screen-execute {
+    justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
+  }
+
+  .execute-icon { font-size: 60px; margin-bottom: 20px; }
+
+  .execute-label {
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .execute-name {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--moon);
+    margin-bottom: 8px;
+  }
+
+  .execute-role-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .execute-role-badge.wolf { background: rgba(224,92,92,0.15); color: #e08080; border: 1px solid rgba(224,92,92,0.3); }
+  .execute-role-badge.citizen { background: rgba(74,138,74,0.15); color: #7ac07a; border: 1px solid rgba(74,138,74,0.3); }
+
+  .execute-votes-summary {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 36px;
+    line-height: 1.7;
+  }
+
+  .execute-divider {
+    width: 50px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 auto 28px;
+  }
+
+  .no-execute-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 28px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 320px;
+  }
+
+  /* ========= DEAL ALL DONE STATE ========= */
+  .alldone-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .alldone-icon { font-size: 52px; margin-bottom: 20px; }
+  .alldone-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--moon);
+    margin-bottom: 10px;
+  }
+  .alldone-sub { font-size: 14px; color: var(--muted); margin-bottom: 40px; line-height: 1.6; }
+
+  /* ========= NIGHT PHASE ========= */
+  #screen-night { justify-content: center; padding: 30px 24px; }
+  #screen-morning { justify-content: center; text-align: center; padding: 40px 24px; }
+
+  .night-progress {
+    position: absolute; top: 20px; left: 0; right: 0;
+    text-align: center; font-size: 12px; letter-spacing: 0.3em; color: var(--muted);
+  }
+
+  .night-pass-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    width: 100%; text-align: center;
+  }
+
+  .night-icon { font-size: 52px; margin-bottom: 16px; animation: passFloat 2s ease-in-out infinite; }
+
+  .night-pass-label { font-size: 12px; letter-spacing: 0.35em; color: var(--muted); margin-bottom: 8px; }
+  .night-pass-name {
+    font-family: 'Shippori Mincho', serif; font-size: 30px; font-weight: 700;
+    color: var(--moon); margin-bottom: 4px;
+  }
+  .night-pass-sub { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+
+  .night-caution {
+    font-size: 12px; color: #c05050; margin-bottom: 36px;
+    padding: 8px 16px; border: 1px dashed rgba(224,92,92,0.3); border-radius: 6px;
+  }
+
+  .btn-night-reveal {
+    background: transparent; border: 1.5px solid rgba(200,169,110,0.5);
+    color: var(--accent); font-family: 'Shippori Mincho', serif;
+    font-size: 15px; letter-spacing: 0.25em; padding: 14px 36px; border-radius: 4px;
+    cursor: pointer; transition: all 0.2s; width: 100%; max-width: 280px;
+  }
+  .btn-night-reveal:active { background: rgba(200,169,110,0.1); transform: scale(0.97); }
+
+  .night-action-wrap {
+    display: none; flex-direction: column; align-items: center; width: 100%;
+    animation: revealPop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .night-role-header { text-align: center; margin-bottom: 20px; }
+  .night-role-emoji { font-size: 36px; margin-bottom: 8px; display: block; }
+  .night-role-label { font-size: 10px; letter-spacing: 0.4em; color: var(--muted); margin-bottom: 4px; }
+  .night-action-title {
+    font-family: 'Shippori Mincho', serif; font-size: 20px; font-weight: 600; color: var(--moon);
+  }
+
+  .night-targets {
+    width: 100%; max-width: 340px; display: flex;
+    flex-direction: column; gap: 10px; margin-bottom: 16px;
+  }
+
+  .btn-night-target {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 18px; text-align: left; cursor: pointer; font-size: 15px;
+    color: var(--text); font-family: 'Noto Sans JP', sans-serif;
+    display: flex; align-items: center; gap: 12px; transition: all 0.2s; width: 100%;
+  }
+  .btn-night-target.wolf-t:active  { border-color: var(--wolf); background: rgba(224,92,92,0.08); transform: scale(0.98); }
+  .btn-night-target.seer-t:active  { border-color: var(--accent2); background: rgba(123,94,167,0.08); transform: scale(0.98); }
+  .btn-night-target.guard-t:active { border-color: #4a8a4a; background: rgba(74,138,74,0.08); transform: scale(0.98); }
+
+  /* Math */
+  .math-wrap { width: 100%; max-width: 300px; text-align: center; }
+  .math-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  .math-equation {
+    font-family: 'Shippori Mincho', serif; font-size: 52px; font-weight: 800;
+    color: var(--moon); margin-bottom: 28px; letter-spacing: 0.1em;
+  }
+  .math-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn-math {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 0; font-family: 'Shippori Mincho', serif; font-size: 28px;
+    font-weight: 700; color: var(--text); cursor: pointer; transition: all 0.15s;
+  }
+  .btn-math:active { transform: scale(0.94); }
+  .btn-math.correct { border-color: #4a8a4a; background: rgba(74,138,74,0.12); color: #7ac07a; }
+  .btn-math.wrong { animation: shake 0.35s ease; border-color: var(--wolf); color: #e08080; }
+
+  @keyframes shake {
+    0%,100%{ transform: translateX(0); }
+    20%{ transform: translateX(-6px); }
+    60%{ transform: translateX(6px); }
+  }
+
+  /* Seer / Medium result */
+  .seer-result-box {
+    width: 100%; max-width: 300px; border-radius: 12px; padding: 24px;
+    text-align: center; margin-bottom: 16px; border: 1.5px solid;
+    animation: revealPop 0.3s ease;
+  }
+  .seer-result-box.wolf    { background: rgba(224,92,92,0.08);  border-color: rgba(224,92,92,0.4); }
+  .seer-result-box.citizen { background: rgba(74,138,74,0.08);  border-color: rgba(74,138,74,0.4); }
+  .seer-result-name { font-family: 'Shippori Mincho', serif; font-size: 22px; font-weight: 700; color: var(--moon); margin-bottom: 8px; }
+  .seer-result-role { font-size: 16px; font-weight: 600; }
+  .seer-result-box.wolf    .seer-result-role { color: #e08080; }
+  .seer-result-box.citizen .seer-result-role { color: #7ac07a; }
+
+  /* Morning */
+  .morning-icon { font-size: 56px; margin-bottom: 16px; }
+  .morning-label { font-size: 11px; letter-spacing: 0.4em; color: var(--muted); margin-bottom: 8px; }
+  .morning-title {
+    font-family: 'Shippori Mincho', serif; font-size: 28px; font-weight: 700;
+    color: var(--moon); margin-bottom: 24px;
+  }
+  .morning-victim-card {
+    width: 100%; max-width: 300px;
+    background: linear-gradient(145deg, #2a1010, #1a0808);
+    border: 1.5px solid rgba(224,92,92,0.4); border-radius: 12px;
+    padding: 24px; margin-bottom: 24px;
+  }
+  .morning-victim-name { font-family: 'Shippori Mincho', serif; font-size: 28px; font-weight: 700; color: #ffd0d0; margin-bottom: 8px; }
+  .morning-victim-role { font-size: 14px; color: rgba(224,92,92,0.8); }
+  .morning-safe-card {
+    width: 100%; max-width: 300px;
+    background: rgba(74,138,74,0.08); border: 1.5px solid rgba(74,138,74,0.3);
+    border-radius: 12px; padding: 20px; margin-bottom: 24px;
+    font-size: 14px; color: #7ac07a; line-height: 1.6;
+  }
+  .morning-divider { width: 50px; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 0 auto 24px; }
+
+  /* Decorative corner */
+  .corner-deco {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--accent2) 70%, transparent 100%);
+    opacity: 0.4;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<div class="corner-deco"></div>
+
+<!-- ====== TITLE SCREEN ====== -->
+<div id="screen-title" class="screen active">
+  <div class="title-bg"></div>
+
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;position:relative;z-index:1;">
+    <div class="moon"></div>
+    <div class="wolf-icon">🐺</div>
+    <h1 class="title-main">人狼</h1>
+    <p class="title-sub">JINRO — 夜の村</p>
+    <div class="title-divider"></div>
+    <button class="btn-play" onclick="showScreen('count')">プ　レ　イ</button>
+  </div>
+
+  <div class="forest-silhouette">
+    <svg viewBox="0 0 400 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,160 L0,100 L15,85 L25,95 L35,65 L45,80 L55,50 L65,70 L75,40 L85,60 L95,30 L105,55 L115,20 L125,50 L135,35 L145,65 L155,25 L165,55 L175,38 L185,68 L195,15 L205,45 L215,28 L225,58 L235,18 L245,48 L255,32 L265,62 L275,42 L285,72 L295,30 L305,60 L315,45 L325,75 L335,55 L345,85 L355,65 L365,90 L375,70 L385,95 L400,80 L400,160 Z" fill="#0a0a0f"/>
+      <path d="M0,160 L0,120 L20,105 L40,115 L60,90 L80,100 L100,80 L120,95 L140,75 L160,90 L180,70 L200,85 L220,68 L240,82 L260,72 L280,88 L300,76 L320,92 L340,80 L360,95 L380,85 L400,100 L400,160 Z" fill="#0d0d14" opacity="0.9"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ====== COUNT SCREEN ====== -->
+<div id="screen-count" class="screen">
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+
+  <div class="screen-header">
+    <p class="screen-label">Step 1</p>
+    <h2 class="screen-title">人数を選ぶ</h2>
+  </div>
+
+  <div class="count-grid">
+    <button class="btn-count" onclick="selectCount(4)"><span class="count-num">4</span><span class="count-label">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(5)"><span class="count-num">5</span><span class="count-label">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(6)"><span class="count-num">6</span><span class="count-label">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(7)"><span class="count-num">7</span><span class="count-label">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(8)"><span class="count-num">8</span><span class="count-label">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(9)"><span class="count-num">9</span><span class="count-label">人でプレイ</span></button>
+    <button class="btn-count" onclick="selectCount(10)" style="grid-column: span 2;"><span class="count-num">10</span><span class="count-label">人でプレイ</span></button>
+  </div>
+
+  <button class="btn-back" onclick="showScreen('title')">← 戻る</button>
+</div>
+
+<!-- ====== NAMES SCREEN ====== -->
+<div id="screen-names" class="screen">
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot active"></div>
+    <div class="dot"></div>
+  </div>
+
+  <div class="screen-header">
+    <p class="screen-label">Step 2</p>
+    <h2 class="screen-title">名前を入力</h2>
+  </div>
+
+  <div class="scroll-area">
+    <div class="names-list" id="names-list"></div>
+  </div>
+
+  <button class="btn-primary" onclick="goToMode()">次へ →</button>
+  <button class="btn-back" onclick="showScreen('count')">← 戻る</button>
+</div>
+
+<!-- ====== MODE SCREEN ====== -->
+<div id="screen-mode" class="screen">
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot active"></div>
+  </div>
+
+  <div class="screen-header">
+    <p class="screen-label">Step 3</p>
+    <h2 class="screen-title">モードを選ぶ</h2>
+  </div>
+
+  <div class="mode-cards">
+    <button class="mode-card normal-card" onclick="startGame('normal')">
+      <span class="mode-badge badge-standard">STANDARD</span>
+      <span class="mode-icon">🌕</span>
+      <div class="mode-name">ノーマルモード</div>
+      <div class="mode-desc">市民・人狼のみのシンプルな構成。<br>ルール説明不要で今すぐ遊べる。</div>
+    </button>
+
+    <button class="mode-card job-card" onclick="startGame('job')">
+      <span class="mode-badge badge-coming">JOB MODE</span>
+      <span class="mode-icon">🔮</span>
+      <div class="mode-name">ジョブモード</div>
+      <div class="mode-desc">占い師・騎士など特殊役職あり。<br>カスタム設定で本格的な人狼を。</div>
+    </button>
+  </div>
+
+  <button class="btn-back" onclick="showScreen('names')" style="margin-top:20px;">← 戻る</button>
+</div>
+
+<!-- ====== DEAL PHASE ====== -->
+<div id="screen-deal" class="screen">
+  <div class="deal-progress" id="deal-progress"></div>
+
+  <!-- PASS STATE: ask player to take phone -->
+  <div class="pass-state" id="deal-pass">
+    <div class="pass-icon">📱</div>
+    <p class="pass-instruction">スマホを渡してください</p>
+    <p class="pass-name" id="deal-player-name"></p>
+    <p class="pass-sub">さんへ</p>
+    <button class="btn-reveal" onclick="revealRole()">タップして役職を確認</button>
+  </div>
+
+  <!-- ROLE REVEAL STATE -->
+  <div class="reveal-state" id="deal-reveal">
+    <div class="role-card" id="deal-role-card">
+      <span class="role-tag" id="deal-role-tag"></span>
+      <span class="role-emoji" id="deal-role-emoji"></span>
+      <span class="role-name" id="deal-role-name"></span>
+      <p class="role-desc-text" id="deal-role-desc"></p>
+    </div>
+    <p class="role-warning">⚠️ 他の人には見せないでください</p>
+    <button class="btn-confirm" onclick="confirmRole()">確認しました　→</button>
+  </div>
+
+  <!-- ALL DONE STATE -->
+  <div class="alldone-state" id="deal-alldone">
+    <div class="alldone-icon">🌙</div>
+    <p class="alldone-title">全員の配布が完了</p>
+    <p class="alldone-sub">それぞれの役職を胸に秘め、<br>議論を始めましょう。</p>
+    <button class="btn-primary" style="max-width:300px;" onclick="startDayPhase()">昼フェーズへ　→</button>
+  </div>
+</div>
+
+<!-- ====== DAY PHASE ====== -->
+<div id="screen-day" class="screen">
+  <div class="phase-header">
+    <div class="phase-day-badge">☀️ <span id="day-badge-text"></span></div>
+    <h2 class="phase-title" id="day-title"></h2>
+    <p class="phase-sub" id="day-subtitle"></p>
+  </div>
+
+  <div class="alive-section">
+    <p class="alive-section-label">▸ 生存者</p>
+    <div class="alive-chips" id="day-alive-chips"></div>
+  </div>
+
+  <div class="day-note" id="day-note"></div>
+
+  <button class="btn-primary" style="max-width:340px;" id="day-next-btn" onclick="dayNextPhase()"></button>
+</div>
+
+<!-- ====== VOTE PHASE ====== -->
+<div id="screen-vote" class="screen">
+  <div class="phase-header">
+    <div class="phase-day-badge">🗳️ 投票フェーズ</div>
+    <h2 class="phase-title">誰に投票する？</h2>
+  </div>
+
+  <div class="vote-progress-bar">
+    <div class="vote-progress-fill" id="vote-progress-fill"></div>
+  </div>
+
+  <div class="voter-pass">
+    <p class="voter-instruction">スマホを渡してください</p>
+    <p class="voter-name" id="vote-voter-name"></p>
+    <p class="voter-sub">さんが投票します</p>
+  </div>
+
+  <div class="vote-targets" id="vote-targets"></div>
+  <button class="btn-vote-skip" onclick="castVote(null)">— 棄権する —</button>
+</div>
+
+<!-- ====== EXECUTE RESULT ====== -->
+<div id="screen-execute" class="screen">
+  <div id="execute-content"></div>
+  <button class="btn-primary" style="max-width:300px;" id="execute-next-btn" onclick="afterExecute()"></button>
+</div>
+
+<!-- ====== NIGHT PHASE ====== -->
+<div id="screen-night" class="screen">
+  <div class="night-progress" id="night-progress"></div>
+
+  <div class="night-pass-wrap" id="night-pass-wrap">
+    <div class="night-icon">🌙</div>
+    <p class="night-pass-label">スマホを渡してください</p>
+    <p class="night-pass-name" id="night-player-name"></p>
+    <p class="night-pass-sub">さんへ</p>
+    <p class="night-caution">⚠️ 他の人は画面を見ないでください</p>
+    <button class="btn-night-reveal" onclick="showNightAction()">タップして確認</button>
+  </div>
+
+  <div class="night-action-wrap" id="night-action-wrap">
+    <div class="night-role-header">
+      <span class="night-role-emoji" id="night-action-emoji"></span>
+      <p class="night-role-label" id="night-action-label"></p>
+      <p class="night-action-title" id="night-action-title"></p>
+    </div>
+    <div id="night-action-content"></div>
+  </div>
+</div>
+
+<!-- ====== MORNING ====== -->
+<div id="screen-morning" class="screen">
+  <div id="morning-content"></div>
+  <button class="btn-primary" style="max-width:300px;margin-top:8px;" id="morning-next-btn"></button>
+</div>
+
+<!-- ====== VICTORY ====== -->
+<div id="screen-victory" class="screen" style="justify-content:center;text-align:center;padding:40px 24px;">
+  <div id="victory-content"></div>
+  <button class="btn-primary" style="max-width:300px;margin-top:8px;" onclick="location.reload()">もう一度遊ぶ</button>
+</div>
+
+<script>
+// ─── State ─────────────────────────────────────────
+let playerCount = 0, currentGameMode = 'normal';
+let playerNames = [], playerRoles = [];
+let alivePlayers = [], deadPlayers = [];
+let mediumInvestigated = new Set();
+let dealIndex = 0, dayCount = 0;
+// Vote
+let voteOrder = [], voteIndex = 0, voteTally = {};
+// Night
+let nightOrder = [], nightIdx = 0;
+let nightWolfVotes = {}, nightProtectedIdx = null, nightPoliceTarget = null;
+// Special
+let gamblerBets = {};       // gamblerIdx -> targetIdx
+let gamblerLost = new Set();// gamblers whose target died
+let teruExited = new Set(); // teru players who already won & exited
+let copyDone = new Set();   // copy players who already copied
+
+// ─── Role Tables ────────────────────────────────────
+const ROLE_TABLE_NORMAL = {
+  4:  ['wolf','citizen','citizen','citizen'],
+  5:  ['wolf','seer','citizen','citizen','citizen'],
+  6:  ['wolf','wolf','seer','citizen','citizen','citizen'],
+  7:  ['wolf','wolf','seer','bodyguard','citizen','citizen','citizen'],
+  8:  ['wolf','wolf','seer','bodyguard','medium','citizen','citizen','citizen'],
+  9:  ['wolf','wolf','seer','bodyguard','medium','traitor','citizen','citizen','citizen'],
+  10: ['wolf','wolf','wolf','seer','bodyguard','medium','traitor','citizen','citizen','citizen']
+};
+// Job mode faction counts: {v: village, w: wolf, s: solo/none}
+const JOB_COUNTS = {
+  4:{v:2,w:1,s:1}, 5:{v:3,w:1,s:1}, 6:{v:4,w:1,s:1},
+  7:{v:4,w:2,s:1}, 8:{v:5,w:2,s:1}, 9:{v:5,w:3,s:1}, 10:{v:6,w:3,s:1}
+};
+const JOB_VILLAGE_POOL = ['citizen','seer','bodyguard','medium','cursed','police','tanaka','dentist','politician','wolfboy','bomber'];
+const JOB_WOLF_POOL    = ['wolf','traitor'];
+const JOB_SOLO_POOL    = ['teru','gambler','god','fireBoy','copy'];
+
+function generateJobRoles(n) {
+  const {v,w,s} = JOB_COUNTS[n];
+
+  // Pick from pool, allow repeating 'wolf' if count > pool size
+  function pick(pool, count) {
+    const shuffled = [...pool].sort(()=>Math.random()-0.5);
+    const result = [];
+    for (let i = 0; i < count; i++) {
+      result.push(i < shuffled.length ? shuffled[i] : 'wolf');
+    }
+    return result;
+  }
+
+  // Wolf roles: always at least one real 'wolf'
+  let wolfRoles = pick(JOB_WOLF_POOL, w);
+  if (!wolfRoles.includes('wolf')) wolfRoles[0] = 'wolf';
+
+  const villageRoles = pick(JOB_VILLAGE_POOL, v);
+  const soloRoles    = pick(JOB_SOLO_POOL, s);
+
+  const all = [...wolfRoles, ...villageRoles, ...soloRoles];
+  for (let i=all.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1)); [all[i],all[j]]=[all[j],all[i]];
+  }
+  return all;
+}
+
+// type: 'wolf'=人狼陣営, 'village'=村人陣営, 'solo'=個人陣営, 'none'=無陣営
+const ROLES = {
+  wolf:      {name:'人狼',          tag:'人狼陣営', emoji:'🐺', type:'wolf',
+    desc:'毎晩村人を一人消せます。正体を隠して処刑を逃れましょう。村人が人狼と同数以下で人狼の勝利。'},
+  traitor:   {name:'裏切り者',      tag:'人狼陣営', emoji:'🎭', type:'wolf',
+    desc:'人狼陣営の市民。能力なし。占いでは村人陣営と出ます。人狼が全滅すると負け。'},
+  citizen:   {name:'市民',          tag:'村人陣営', emoji:'🏘️', type:'village',
+    desc:'特殊能力なし。議論と推理で人狼を見つけましょう。全ての人狼を追放すれば村人の勝利。'},
+  seer:      {name:'占い師',        tag:'村人陣営', emoji:'🔮', type:'village',
+    desc:'毎晩一人を選び、村人陣営か人狼陣営かを知れます。情報を活かして村を導きましょう。'},
+  bodyguard: {name:'ボディーガード', tag:'村人陣営', emoji:'🛡️', type:'village',
+    desc:'毎晩一人（自分以外）を人狼の襲撃から守れます。'},
+  medium:    {name:'霊媒師',        tag:'村人陣営', emoji:'🕯️', type:'village',
+    desc:'死亡したプレイヤーの陣営を調べられます。一人につき一回のみ有効。'},
+  // ── Job mode ──
+  teru:      {name:'てるてる坊主',  tag:'個人陣営', emoji:'🎎', type:'solo',
+    desc:'投票で処刑されると単独勝ち＆ゲームから退場。夜に殺されたら普通にリタイア。夜は市民と同じ。'},
+  cursed:    {name:'狼憑き',        tag:'村人陣営', emoji:'🐾', type:'village',
+    desc:'普通の市民だが、占われると人狼陣営と判定される。警察に狙われても死ぬ。夜は市民と同じ。'},
+  police:    {name:'警察',          tag:'村人陣営', emoji:'👮', type:'village',
+    desc:'毎晩一人を狙える。人狼・裏切り者・狼憑きを狙えば成功。それ以外を狙うと自分が死ぬ。棄権可。'},
+  tanaka:    {name:'田中',          tag:'村人陣営', emoji:'🙋', type:'village',
+    desc:'昼になると「田中さんは村人陣営です」と全員に公表される。夜は市民と同じ。'},
+  copy:      {name:'コピー',        tag:'無陣営',   emoji:'🃏', type:'none',
+    desc:'毎晩、死んだ人の役職を好きに引き継げる。引き継いだ瞬間からその陣営になる。棄権も可。'},
+  gambler:   {name:'ギャンブラー',  tag:'個人陣営', emoji:'🎰', type:'solo',
+    desc:'夜に誰かを指名。指名した人の陣営が勝てば単独勝ち。指名した人が死んだら勝利条件を失う。'},
+  dentist:   {name:'歯医者',        tag:'村人陣営', emoji:'🦷', type:'village',
+    desc:'毎晩一人の虫歯率を見れる。村人陣営は0〜60%、人狼陣営・狼憑きは45〜100%。'},
+  politician:{name:'政治家',        tag:'村人陣営', emoji:'🗳️', type:'village',
+    desc:'自分への投票が3倍の重みで計算される（処刑されやすくなる）。夜は市民と同じ。'},
+  wolfboy:   {name:'オオカミ少年',  tag:'村人陣営', emoji:'📢', type:'village',
+    desc:'2日目の夜、人狼陣営が全員わかる。ただし人狼側にも自分がオオカミ少年だとばれる。'},
+  bomber:    {name:'爆弾魔',        tag:'村人陣営', emoji:'💣', type:'village',
+    desc:'投票で処刑されるとランダムで1人を道連れにする。夜は市民と同じ。'},
+  god:       {name:'神',            tag:'個人陣営', emoji:'⚡', type:'solo',
+    desc:'夜に全員の役職を確認できる。ゲーム終了時に生きていれば単独勝ち（他の勝者を上書き）。'},
+  fireBoy:   {name:'ファイヤーボーイ', tag:'個人陣営', emoji:'🔥', type:'solo',
+    desc:'2日目以降の昼に1/36の確率で単独勝ち。複数が同時に発動した場合は全員勝ち。'},
+};
+
+// ─── Utils ──────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'title') { const w = document.getElementById('win-audio'); w.pause(); w.currentTime = 0; playBgm('title'); }
+}
+
+function aliveWolves()    { return alivePlayers.filter(i => ROLES[playerRoles[i]].type === 'wolf'); }
+function aliveCitizens()  { return alivePlayers.filter(i => ROLES[playerRoles[i]].type === 'village'); }
+function aliveNonWolves() { return alivePlayers.filter(i => ROLES[playerRoles[i]].type !== 'wolf'); }
+
+function getRealFaction(idx) {
+  // For seer/dentist: cursed shows as wolf, traitor shows as village
+  const r = playerRoles[idx];
+  if (r === 'cursed') return 'wolf';
+  if (r === 'traitor') return 'village';
+  return ROLES[r].type;
+}
+
+function generateMath() {
+  const a = Math.floor(Math.random()*9)+1, b = Math.floor(Math.random()*9)+1;
+  const ans = a + b;
+  const wrongs = new Set();
+  while (wrongs.size < 3) {
+    const w = ans + (Math.floor(Math.random()*5) - 2);
+    if (w !== ans && w > 0) wrongs.add(w);
+  }
+  return { eq:`${a} + ${b}`, ans, choices:[...wrongs, ans].sort(()=>Math.random()-0.5) };
+}
+
+function markDeath(idx) {
+  // When a player dies, check gambler bets
+  gamblerBets && Object.entries(gamblerBets).forEach(([gIdx, tIdx]) => {
+    if (+tIdx === idx) gamblerLost.add(+gIdx);
+  });
+}
+
+// ─── Setup ──────────────────────────────────────────
+function selectCount(n) { playerCount = n; buildNameInputs(n); showScreen('names'); }
+
+function buildNameInputs(n) {
+  const list = document.getElementById('names-list');
+  list.innerHTML = '';
+  for (let i=1;i<=n;i++) {
+    const row = document.createElement('div'); row.className = 'name-row';
+    row.innerHTML = `<span class="name-num">${i}</span>
+      <input class="name-input" id="name-${i}" type="text" placeholder="プレイヤー ${i} の名前" maxlength="10" autocomplete="off">`;
+    list.appendChild(row);
+  }
+}
+
+function getNames() {
+  return Array.from({length:playerCount},(_,i)=>{
+    const v = document.getElementById(`name-${i+1}`)?.value.trim();
+    return v || `プレイヤー${i+1}`;
+  });
+}
+
+function goToMode() { showScreen('mode'); }
+
+function startGame(mode) {
+  // job mode is available
+  currentGameMode = mode;
+  playerNames = getNames();
+  playerRoles = assignRoles(playerCount, mode);
+  alivePlayers = playerNames.map((_,i)=>i);
+  deadPlayers = []; mediumInvestigated = new Set();
+  gamblerBets = {}; gamblerLost = new Set();
+  teruExited = new Set(); copyDone = new Set();
+  dayCount = 0; dealIndex = 0;
+  showDealPass(); showScreen('deal');
+}
+
+function assignRoles(n, mode) {
+  if (mode === 'job') return generateJobRoles(n);
+  let roles = [...ROLE_TABLE_NORMAL[n]];
+  for (let i=roles.length-1;i>0;i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [roles[i],roles[j]] = [roles[j],roles[i]];
+  }
+  return roles;
+}
+
+// ─── Deal Phase ─────────────────────────────────────
+function showDealPass() {
+  document.getElementById('deal-pass').style.display = 'flex';
+  document.getElementById('deal-reveal').style.display = 'none';
+  document.getElementById('deal-alldone').style.display = 'none';
+  document.getElementById('deal-player-name').textContent = playerNames[dealIndex];
+  document.getElementById('deal-progress').textContent = `${dealIndex+1} / ${playerCount}`;
+}
+
+function revealRole() {
+  const role = ROLES[playerRoles[dealIndex]];
+  const card = document.getElementById('deal-role-card');
+  // Use wolf styling for wolf types, citizen for village/solo/none
+  card.className = 'role-card ' + (role.type === 'wolf' ? 'wolf' : 'citizen');
+  document.getElementById('deal-role-tag').textContent = role.tag;
+  document.getElementById('deal-role-emoji').textContent = role.emoji;
+  document.getElementById('deal-role-name').textContent = role.name;
+  document.getElementById('deal-role-desc').textContent = role.desc;
+  document.getElementById('deal-pass').style.display = 'none';
+  document.getElementById('deal-reveal').style.display = 'flex';
+}
+
+function confirmRole() {
+  dealIndex++;
+  if (dealIndex >= playerCount) {
+    document.getElementById('deal-pass').style.display = 'none';
+    document.getElementById('deal-reveal').style.display = 'none';
+    document.getElementById('deal-alldone').style.display = 'flex';
+    document.getElementById('deal-progress').textContent = '配布完了';
+  } else { showDealPass(); }
+}
+
+// ─── Day Phase ──────────────────────────────────────
+function startDayPhase() { dayCount = 1; showDayScreen(); showScreen('day'); }
+
+function showDayScreen() {
+  playBgm('day');
+  const first = dayCount === 1;
+  document.getElementById('day-badge-text').textContent = `第 ${dayCount} 日目`;
+  document.getElementById('day-title').textContent = '昼 — 議論の時間';
+  document.getElementById('day-subtitle').textContent = first
+    ? '今日は投票なし。自由に話し合おう。' : '議論の後、投票で一人を処刑する。';
+
+  // Alive chips
+  const chips = document.getElementById('day-alive-chips');
+  chips.innerHTML = '';
+  alivePlayers.forEach(i => {
+    const c = document.createElement('div'); c.className = 'alive-chip';
+    c.innerHTML = `<span class="alive-dot"></span>${playerNames[i]}`;
+    chips.appendChild(c);
+  });
+
+  // Tanaka announcement
+  const tanakasAlive = alivePlayers.filter(i => playerRoles[i] === 'tanaka');
+  let noteText = first
+    ? '📜 初日は投票なし。全員で自由に議論し、怪しい人物を探りましょう。準備ができたら夜フェーズへ進んでください。'
+    : '📜 議論が終わったら「投票へ」を押して、処刑する人物を決定します。';
+  if (tanakasAlive.length > 0) {
+    noteText += `\n\n🙋 田中さんは村人陣営です：${tanakasAlive.map(i=>playerNames[i]).join('、')}`;
+  }
+  document.getElementById('day-note').textContent = noteText;
+  document.getElementById('day-note').style.whiteSpace = 'pre-line';
+
+  // FireBoy check (day 2+)
+  if (!first && currentGameMode === 'job') {
+    const fireboys = alivePlayers.filter(i => playerRoles[i] === 'fireBoy');
+    const winners = fireboys.filter(() => Math.floor(Math.random()*36) === 0);
+    if (winners.length > 0) {
+      setTimeout(() => {
+        const names = winners.map(i=>playerNames[i]).join('、');
+        document.getElementById('day-note').textContent =
+          `🔥 ${names} のファイヤーボーイが炎上！単独勝ち！`;
+        document.getElementById('day-next-btn').textContent = '結果を見る';
+        document.getElementById('day-next-btn').onclick = () => showVictory('solo', winners);
+      }, 300);
+      return;
+    }
+  }
+
+  const btn = document.getElementById('day-next-btn');
+  btn.textContent = first ? '夜フェーズへ →' : '投票へ →';
+  btn.onclick = dayNextPhase;
+}
+
+function dayNextPhase() { dayCount === 1 ? startNightPhase() : startVotePhase(); }
+
+// ─── Vote Phase ─────────────────────────────────────
+function startVotePhase() {
+  playBgm('vote');
+  voteOrder = [...alivePlayers]; voteIndex = 0;
+  voteTally = {abstain:0};
+  alivePlayers.forEach(i => { voteTally[i] = 0; });
+  showVoteTurn(); showScreen('vote');
+}
+
+function showVoteTurn() {
+  const voterIdx = voteOrder[voteIndex];
+  document.getElementById('vote-voter-name').textContent = playerNames[voterIdx];
+  document.getElementById('vote-progress-fill').style.width = (voteIndex/voteOrder.length*100)+'%';
+  const targets = document.getElementById('vote-targets');
+  targets.innerHTML = '';
+  alivePlayers.forEach(i => {
+    if (i === voterIdx) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn-vote-target';
+    btn.innerHTML = `<span class="vote-target-icon">👤</span>${playerNames[i]}`;
+    btn.onclick = () => castVote(i);
+    targets.appendChild(btn);
+  });
+}
+
+function castVote(targetIdx) {
+  if (targetIdx !== null) voteTally[targetIdx] = (voteTally[targetIdx]||0)+1;
+  else voteTally['abstain'] = (voteTally['abstain']||0)+1;
+  voteIndex++;
+  if (voteIndex >= voteOrder.length) showExecuteResult();
+  else { showVoteTurn(); window.scrollTo(0,0); }
+}
+
+// ─── Execute Result ──────────────────────────────────
+function showExecuteResult() {
+  const abstainCount = voteTally['abstain'] || 0;
+
+  // Politician multiplier: votes FOR politician ×3
+  const politicianIdx = alivePlayers.find(i => playerRoles[i] === 'politician');
+  const adjustedTally = {...voteTally};
+  if (politicianIdx !== undefined && adjustedTally[politicianIdx]) {
+    adjustedTally[politicianIdx] = (adjustedTally[politicianIdx]||0) * 3;
+  }
+
+  let maxPlayerVotes = 0;
+  alivePlayers.forEach(i => { if ((adjustedTally[i]||0) > maxPlayerVotes) maxPlayerVotes = adjustedTally[i]||0; });
+  const topCandidates = alivePlayers.filter(i => (adjustedTally[i]||0) === maxPlayerVotes);
+  const noExecution = abstainCount > maxPlayerVotes || topCandidates.length > 1 || maxPlayerVotes === 0;
+
+  const content = document.getElementById('execute-content');
+  const nextBtn = document.getElementById('execute-next-btn');
+
+  if (noExecution) {
+    const reason = abstainCount > maxPlayerVotes
+      ? `棄権が最多（${abstainCount}票）でした。`
+      : maxPlayerVotes === 0 ? '全員が棄権しました。'
+      : topCandidates.map(i=>playerNames[i]).join('、') + ' が同票でした。';
+    content.innerHTML = `
+      <div class="execute-icon">⚖️</div>
+      <p class="execute-label">処刑結果</p>
+      <div class="no-execute-box">${reason}<br><br>今日は誰も処刑されませんでした。</div>
+      <div class="execute-divider"></div>`;
+    nextBtn.textContent = '夜フェーズへ →';
+    nextBtn.onclick = () => startNightPhase();
+    showScreen('execute'); return;
+  }
+
+  const executedIdx = topCandidates[0];
+  const voteSummary = Object.entries(adjustedTally)
+    .filter(([k,v])=> v>0 && k!=='abstain').map(([i,v])=>`${playerNames[i]}：${v}票`).join('　')
+    + (abstainCount > 0 ? `　棄権：${abstainCount}票` : '');
+
+  // ── てるてる坊主: instant solo win ──
+  if (playerRoles[executedIdx] === 'teru') {
+    deadPlayers.push({idx:executedIdx, role:playerRoles[executedIdx]});
+    alivePlayers = alivePlayers.filter(i => i !== executedIdx);
+    markDeath(executedIdx);
+    showVictory('solo', [executedIdx]);
+    return;
+  }
+
+  // Normal execution
+  content.innerHTML = `
+    <div class="execute-icon">🪦</div>
+    <p class="execute-label">処刑</p>
+    <p class="execute-name">${playerNames[executedIdx]}</p>
+    <p class="execute-votes-summary">${voteSummary}</p>
+    <div class="execute-divider"></div>`;
+
+  deadPlayers.push({idx:executedIdx, role:playerRoles[executedIdx]});
+  alivePlayers = alivePlayers.filter(i => i !== executedIdx);
+  markDeath(executedIdx);
+
+  // ── 爆弾魔: chain kill ──
+  let bomberVictimIdx = null;
+  if (playerRoles[executedIdx] === 'bomber' && alivePlayers.length > 0) {
+    bomberVictimIdx = alivePlayers[Math.floor(Math.random()*alivePlayers.length)];
+    deadPlayers.push({idx:bomberVictimIdx, role:playerRoles[bomberVictimIdx]});
+    alivePlayers = alivePlayers.filter(i => i !== bomberVictimIdx);
+    markDeath(bomberVictimIdx);
+    content.innerHTML += `<div class="no-execute-box" style="border-color:#e05c5c;color:#e08080;">
+      💣 爆弾魔の道連れ！<br>${playerNames[bomberVictimIdx]} も巻き込まれた…
+    </div><div class="execute-divider"></div>`;
+  }
+
+  const winResult = checkWinCondition();
+  if (winResult) {
+    nextBtn.textContent = '結果を見る';
+    nextBtn.onclick = () => showVictory(winResult.winner, winResult.soloWinners);
+  } else {
+    nextBtn.textContent = '夜フェーズへ →';
+    nextBtn.onclick = () => startNightPhase();
+  }
+  showScreen('execute');
+}
+
+// ─── Night Phase ────────────────────────────────────
+function startNightPhase() {
+  playBgm('night');
+  nightOrder = [...alivePlayers];
+  nightIdx = 0; nightWolfVotes = {}; nightProtectedIdx = null; nightPoliceTarget = null;
+  showNightPass(); showScreen('night');
+}
+
+function showNightPass() {
+  const pIdx = nightOrder[nightIdx];
+  document.getElementById('night-player-name').textContent = playerNames[pIdx];
+  document.getElementById('night-progress').textContent = `${nightIdx+1} / ${nightOrder.length}`;
+  document.getElementById('night-pass-wrap').style.display = 'flex';
+  document.getElementById('night-action-wrap').style.display = 'none';
+  window.scrollTo(0,0);
+}
+
+function showNightAction() {
+  const pIdx = nightOrder[nightIdx];
+  const roleKey = playerRoles[pIdx];
+  const role = ROLES[roleKey];
+  document.getElementById('night-action-emoji').textContent = role.emoji;
+  document.getElementById('night-action-label').textContent = role.tag;
+  document.getElementById('night-pass-wrap').style.display = 'none';
+  document.getElementById('night-action-wrap').style.display = 'flex';
+  const content = document.getElementById('night-action-content');
+  content.innerHTML = '';
+
+  switch(roleKey) {
+    case 'wolf':      buildWolfAction(pIdx, content); break;
+    case 'seer':      buildSeerAction(pIdx, content); break;
+    case 'bodyguard': buildGuardAction(pIdx, content); break;
+    case 'medium':    buildMediumAction(pIdx, content); break;
+    case 'police':    buildPoliceAction(pIdx, content); break;
+    case 'copy':      buildCopyAction(pIdx, content); break;
+    case 'gambler':   buildGamblerAction(pIdx, content); break;
+    case 'dentist':   buildDentistAction(pIdx, content); break;
+    case 'wolfboy':   buildWolfboyAction(pIdx, content); break;
+    case 'god':       buildGodAction(pIdx, content); break;
+    default:          buildMathAction(content); break; // citizen, traitor, cursed, teru, tanaka, politician, bomber, fireBoy
+  }
+}
+
+// Wolf
+function buildWolfAction(pIdx, content) {
+  let title = '今夜、誰を襲いますか？';
+  // Night 2+: wolfboy is revealed
+  if (dayCount >= 2) {
+    const wbIdx = alivePlayers.find(i => playerRoles[i] === 'wolfboy');
+    if (wbIdx !== undefined) {
+      title += `\n⚠️ オオカミ少年：${playerNames[wbIdx]}`;
+    }
+  }
+  document.getElementById('night-action-title').textContent = title;
+  document.getElementById('night-action-title').style.whiteSpace = 'pre-line';
+  const nonWolves = alivePlayers.filter(i => ROLES[playerRoles[i]].type !== 'wolf');
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  nonWolves.forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target wolf-t';
+    btn.innerHTML = `🔪　${playerNames[i]}`;
+    btn.onclick = () => { nightWolfVotes[i] = (nightWolfVotes[i]||0)+1; nightActionDone(); };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Seer
+function buildSeerAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = '今夜、誰を占いますか？';
+  const targets = alivePlayers.filter(i => i !== pIdx);
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  targets.forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🔮　${playerNames[i]}`;
+    btn.onclick = () => {
+      const seerFaction = getRealFaction(i); // cursed→wolf, traitor→village
+      const isWolf = seerFaction === 'wolf';
+      const fEmoji = isWolf ? '🐺' : '🏘️';
+      const fLabel = isWolf ? '人狼陣営' : '村人陣営';
+      content.innerHTML = `
+        <div class="seer-result-box ${isWolf ? 'wolf' : 'citizen'}">
+          <p class="seer-result-name">${playerNames[i]}</p>
+          <p class="seer-result-role">${fEmoji}　${fLabel}</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ この結果は胸に秘めてください</p>
+        <button class="btn-confirm" onclick="nightActionDone()">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Bodyguard
+function buildGuardAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = '今夜、誰を守りますか？（自分以外）';
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  alivePlayers.filter(i => i !== pIdx).forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target guard-t';
+    btn.innerHTML = `🛡️　${playerNames[i]}`;
+    btn.onclick = () => { nightProtectedIdx = i; nightActionDone(); };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Medium
+function buildMediumAction(pIdx, content) {
+  const available = deadPlayers.filter(d => !mediumInvestigated.has(d.idx));
+  if (available.length === 0) {
+    document.getElementById('night-action-title').textContent = '今は調べられる相手がいません';
+    buildMathAction(content); return;
+  }
+  document.getElementById('night-action-title').textContent = '誰の霊を呼びますか？';
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  available.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🕯️　${playerNames[d.idx]}（故人）`;
+    btn.onclick = () => {
+      mediumInvestigated.add(d.idx);
+      const medFaction = getRealFaction(d.idx);
+      const isWolf = medFaction === 'wolf';
+      content.innerHTML = `
+        <div class="seer-result-box ${isWolf ? 'wolf' : 'citizen'}">
+          <p class="seer-result-name">${playerNames[d.idx]}</p>
+          <p class="seer-result-role">${isWolf ? '🐺　人狼陣営' : '🏘️　村人陣営'}</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ この結果は胸に秘めてください</p>
+        <button class="btn-confirm" onclick="nightActionDone()">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Police
+function buildPoliceAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = '今夜、誰を処刑しますか？\n（外れると自分が死ぬ）';
+  document.getElementById('night-action-title').style.whiteSpace = 'pre-line';
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  alivePlayers.filter(i => i !== pIdx).forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target wolf-t';
+    btn.innerHTML = `👮　${playerNames[i]}`;
+    btn.onclick = () => { nightPoliceTarget = {police: pIdx, target: i}; nightActionDone(); };
+    wrap.appendChild(btn);
+  });
+  // Abstain
+  const skip = document.createElement('button');
+  skip.className = 'btn-vote-skip'; skip.textContent = '— 今夜は動かない —';
+  skip.style.marginTop = '8px';
+  skip.onclick = () => { nightPoliceTarget = null; nightActionDone(); };
+  content.appendChild(wrap);
+  content.appendChild(skip);
+}
+
+// Copy
+function buildCopyAction(pIdx, content) {
+  if (copyDone.has(pIdx)) { buildMathAction(content); return; }
+  const available = deadPlayers.filter(d => !teruExited.has(d.idx));
+  if (available.length === 0) {
+    document.getElementById('night-action-title').textContent = 'まだ誰も死んでいません';
+    buildMathAction(content); return;
+  }
+  document.getElementById('night-action-title').textContent = '誰の役職を引き継ぎますか？';
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  available.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🃏　${playerNames[d.idx]}（故人）`;
+    btn.onclick = () => {
+      copyDone.add(pIdx);
+      const inherited = d.role;
+      const r = ROLES[inherited];
+      playerRoles[pIdx] = inherited;
+      content.innerHTML = `
+        <div class="seer-result-box ${r.type === 'wolf' ? 'wolf' : 'citizen'}" style="text-align:center;padding:24px;">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">あなたが受け継いだ役職は…</p>
+          <p style="font-size:36px;margin-bottom:8px;">${r.emoji}</p>
+          <p class="seer-result-name">${r.name} でした！</p>
+          <p class="seer-result-role">あなたは ${r.tag} になりました！</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ この結果は胸に秘めてください</p>
+        <button class="btn-confirm" onclick="nightActionDone()">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  const skip = document.createElement('button');
+  skip.className = 'btn-vote-skip'; skip.textContent = '— 今夜は引き継がない —';
+  skip.style.marginTop = '8px';
+  skip.onclick = () => nightActionDone();
+  content.appendChild(wrap);
+  content.appendChild(skip);
+}
+
+// Gambler
+function buildGamblerAction(pIdx, content) {
+  if (gamblerBets[pIdx] !== undefined || gamblerLost.has(pIdx)) {
+    // Already bet or lost condition — math
+    document.getElementById('night-action-title').textContent =
+      gamblerLost.has(pIdx) ? '賭けの対象が死亡しました…' : `賭け済み：${playerNames[gamblerBets[pIdx]]}`;
+    buildMathAction(content); return;
+  }
+  document.getElementById('night-action-title').textContent = '誰が勝つと思いますか？\n（役職は見えません）';
+  document.getElementById('night-action-title').style.whiteSpace = 'pre-line';
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  alivePlayers.filter(i => i !== pIdx).forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🎰　${playerNames[i]}`;
+    btn.onclick = () => {
+      gamblerBets[pIdx] = i;
+      content.innerHTML = `
+        <div class="seer-result-box citizen" style="text-align:center;padding:20px;">
+          <p class="seer-result-name">${playerNames[i]}</p>
+          <p class="seer-result-role" style="color:var(--accent);">に賭けました！</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ 賭けの相手には言わないでください</p>
+        <button class="btn-confirm" onclick="nightActionDone()">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Dentist
+function buildDentistAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = '誰の虫歯率を調べますか？';
+  const wrap = document.createElement('div'); wrap.className = 'night-targets';
+  alivePlayers.filter(i => i !== pIdx).forEach(i => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-night-target seer-t';
+    btn.innerHTML = `🦷　${playerNames[i]}`;
+    btn.onclick = () => {
+      const isWolfSide = (ROLES[playerRoles[i]].type === 'wolf' || playerRoles[i] === 'cursed');
+      let pct;
+      if (isWolfSide) pct = 45 + Math.floor(Math.random()*56); // 45-100
+      else pct = Math.floor(Math.random()*61);                  // 0-60
+      const color = pct >= 70 ? '#e08080' : pct >= 45 ? '#c8a96e' : '#7ac07a';
+      content.innerHTML = `
+        <div class="seer-result-box citizen" style="text-align:center;padding:24px;">
+          <p class="seer-result-name">${playerNames[i]}</p>
+          <p style="font-size:36px;font-weight:800;color:${color};margin:8px 0;">${pct}%</p>
+          <p style="font-size:13px;color:var(--muted);">虫歯率</p>
+        </div>
+        <p class="role-warning" style="margin-bottom:16px;">⚠️ この結果は胸に秘めてください</p>
+        <button class="btn-confirm" onclick="nightActionDone()">確認しました　→</button>`;
+    };
+    wrap.appendChild(btn);
+  });
+  content.appendChild(wrap);
+}
+
+// Wolfboy
+function buildWolfboyAction(pIdx, content) {
+  if (dayCount >= 2) {
+    document.getElementById('night-action-title').textContent = '人狼陣営が判明しました';
+    const wolves = alivePlayers.filter(i => ROLES[playerRoles[i]].type === 'wolf');
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'width:100%;max-width:320px;';
+    wrap.innerHTML = wolves.map(i =>
+      `<div class="seer-result-box wolf" style="margin-bottom:10px;text-align:center;padding:14px;">
+        <p class="seer-result-name">${playerNames[i]}</p>
+        <p class="seer-result-role">🐺　人狼陣営</p>
+      </div>`
+    ).join('') + `
+      <p class="role-warning" style="margin:12px 0;">⚠️ 人狼にもあなたの正体がばれています</p>
+      <button class="btn-confirm" style="width:100%;" onclick="nightActionDone()">確認しました　→</button>`;
+    content.appendChild(wrap);
+  } else {
+    document.getElementById('night-action-title').textContent = '1日目の夜は情報なし';
+    buildMathAction(content);
+  }
+}
+
+// God
+function buildGodAction(pIdx, content) {
+  document.getElementById('night-action-title').textContent = '全員の役職が見えます';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'width:100%;max-width:320px;';
+  wrap.innerHTML = alivePlayers.filter(i => i !== pIdx).map(i => {
+    const r = ROLES[playerRoles[i]];
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+      background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
+      <span style="font-size:22px;">${r.emoji}</span>
+      <span style="font-size:15px;">${playerNames[i]}</span>
+      <span style="font-size:12px;color:var(--muted);margin-left:auto;">${r.name}</span>
+    </div>`;
+  }).join('') + `
+    <p class="role-warning" style="margin:12px 0;">⚠️ 生き残ればあなたの勝利です</p>
+    <button class="btn-confirm" style="width:100%;" onclick="nightActionDone()">確認しました　→</button>`;
+  content.appendChild(wrap);
+}
+
+// Math (citizen / fallback)
+function buildMathAction(content) {
+  document.getElementById('night-action-title').textContent = '問題を解いてください';
+  const {eq, ans, choices} = generateMath();
+  const wrap = document.createElement('div'); wrap.className = 'math-wrap';
+  wrap.innerHTML = `
+    <p class="math-desc">あなたの番です。<br>答えを選んで次の人へ渡しましょう。</p>
+    <p class="math-equation">${eq} = ?</p>
+    <div class="math-choices" id="math-grid"></div>`;
+  content.appendChild(wrap);
+  const grid = wrap.querySelector('#math-grid');
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-math'; btn.textContent = c;
+    btn.onclick = () => {
+      if (btn.disabled) return;
+      if (c === ans) {
+        grid.querySelectorAll('.btn-math').forEach(b => {
+          b.disabled = true;
+          if (+b.textContent === ans) b.classList.add('correct');
+          else b.style.opacity = '0.3';
+        });
+        setTimeout(() => nightActionDone(), 700);
+      } else {
+        grid.querySelectorAll('.btn-math').forEach(b => b.disabled = true);
+        btn.classList.add('wrong');
+        setTimeout(() => {
+          btn.classList.remove('wrong');
+          grid.querySelectorAll('.btn-math').forEach(b => b.disabled = false);
+        }, 400);
+      }
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function nightActionDone() {
+  nightIdx++;
+  if (nightIdx >= nightOrder.length) processNightResults();
+  else showNightPass();
+}
+
+// ─── Night Results ───────────────────────────────────
+function processNightResults() {
+  const newDeaths = [];
+
+  // Wolf vote → majority
+  let wolfTarget = null, maxV = 0;
+  Object.entries(nightWolfVotes).forEach(([i,v]) => {
+    if (v > maxV) { maxV = v; wolfTarget = +i; }
+  });
+
+  let wasProtected = false;
+  if (wolfTarget !== null) {
+    if (wolfTarget === nightProtectedIdx) wasProtected = true;
+    else newDeaths.push({idx: wolfTarget, cause: 'wolf'});
+  }
+
+  // Police
+  if (nightPoliceTarget !== null) {
+    const {police: policeIdx, target: tgt} = nightPoliceTarget;
+    const tgtRole = playerRoles[tgt];
+    const isValidTarget = (ROLES[tgtRole].type === 'wolf' || tgtRole === 'cursed');
+    if (isValidTarget) {
+      newDeaths.push({idx: tgt, cause: 'police'});
+    } else {
+      // Police dies
+      newDeaths.push({idx: policeIdx, cause: 'police_fail'});
+    }
+  }
+
+  // Deduplicate deaths & apply
+  const diedIdxs = [...new Set(newDeaths.map(d=>d.idx))];
+  diedIdxs.forEach(idx => {
+    if (!alivePlayers.includes(idx)) return; // already dead
+    deadPlayers.push({idx, role: playerRoles[idx]});
+    alivePlayers = alivePlayers.filter(i => i !== idx);
+    markDeath(idx);
+  });
+
+  showMorning(diedIdxs, wasProtected);
+}
+
+// ─── Morning ────────────────────────────────────────
+function showMorning(diedIdxs, wasProtected) {
+  const content = document.getElementById('morning-content');
+  const nextBtn = document.getElementById('morning-next-btn');
+
+  let html = `<div class="morning-icon">🌅</div>
+    <p class="morning-label">第 ${dayCount} 夜が明けた</p>
+    <p class="morning-title">朝の報告</p>`;
+
+  if (diedIdxs.length > 0) {
+    diedIdxs.forEach(idx => {
+      html += `<div class="morning-victim-card">
+        <p style="font-size:12px;color:rgba(224,92,92,0.7);margin-bottom:8px;letter-spacing:0.2em;">犠牲者</p>
+        <p class="morning-victim-name">${playerNames[idx]}</p>
+      </div>`;
+    });
+  } else if (wasProtected) {
+    html += `<div class="morning-safe-card">🛡️ ボディーガードが守ったおかげで、今夜は誰も犠牲になりませんでした。</div>`;
+  } else {
+    html += `<div class="morning-safe-card">☀️ 今夜は誰も犠牲になりませんでした。</div>`;
+  }
+  html += `<div class="morning-divider"></div>`;
+  content.innerHTML = html;
+
+  const winResult = checkWinCondition();
+  if (winResult) {
+    nextBtn.textContent = '結果を見る';
+    nextBtn.onclick = () => showVictory(winResult.winner, winResult.soloWinners);
+  } else {
+    dayCount++;
+    nextBtn.textContent = `第 ${dayCount} 日目へ →`;
+    nextBtn.onclick = () => { showDayScreen(); showScreen('day'); };
+  }
+  showScreen('morning');
+}
+
+// ─── Win Condition ───────────────────────────────────
+function checkWinCondition() {
+  const wolves    = aliveWolves();
+  const nonWolves = aliveNonWolves();
+  const isOver    = wolves.length === 0 || wolves.length >= nonWolves.length;
+  if (!isOver) return null;
+
+  const winSide = wolves.length === 0 ? 'village' : 'wolf';
+
+  // ── Solo faction is always first priority ──
+  // God check
+  const godAlive = alivePlayers.find(i => playerRoles[i] === 'god');
+  if (godAlive !== undefined) return {winner:'solo', soloWinners:[godAlive]};
+
+  // Gambler check
+  const gamblerWinners = [];
+  Object.entries(gamblerBets).forEach(([gIdx, tIdx]) => {
+    if (gamblerLost.has(+gIdx)) return;
+    const betFaction = ROLES[playerRoles[+tIdx]].type;
+    if ((winSide === 'village' && betFaction !== 'wolf') ||
+        (winSide === 'wolf'    && betFaction === 'wolf')) {
+      gamblerWinners.push(+gIdx);
+    }
+  });
+  if (gamblerWinners.length > 0) return {winner:'solo', soloWinners: gamblerWinners};
+
+  // Other alive solo/none players alive at game end → they win instead
+  const soloAlive = alivePlayers.filter(i => {
+    const t = ROLES[playerRoles[i]].type;
+    return t === 'solo' || t === 'none';
+  });
+  if (soloAlive.length > 0) return {winner:'solo', soloWinners: soloAlive};
+
+  return {winner: winSide, soloWinners: []};
+}
+
+// ─── Victory ────────────────────────────────────────
+function showVictory(winner, soloWinners=[]) {
+  stopBgm();
+  const winAudio = document.getElementById('win-audio');
+  winAudio.currentTime = 0;
+  winAudio.play().catch(()=>{});
+  const content = document.getElementById('victory-content');
+  const wolvesAll = playerRoles.map((r,i)=>({r,i})).filter(({r})=>ROLES[r].type==='wolf');
+  const wolfNames = wolvesAll.map(({r,i})=>`${playerNames[i]}（${ROLES[r].name}）`).join('、');
+
+  let html = '';
+  if (winner === 'solo' && soloWinners.length > 0) {
+    const soloParts = soloWinners.map(i => {
+      const r = ROLES[playerRoles[i]];
+      return `${r.emoji} ${playerNames[i]}（${r.name}）`;
+    }).join('、');
+    html = `
+      <div style="font-size:64px;margin-bottom:16px;">🏆</div>
+      <p style="font-size:11px;letter-spacing:.4em;color:var(--muted);margin-bottom:8px;">GAME OVER</p>
+      <p style="font-family:'Shippori Mincho',serif;font-size:26px;font-weight:700;color:var(--accent);margin-bottom:16px;">単独勝利！</p>
+      <div style="background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.3);border-radius:10px;padding:16px;max-width:300px;margin-bottom:24px;font-size:14px;color:var(--text);line-height:2;">
+        ${soloParts}
+      </div>`;
+  } else if (winner === 'village') {
+    html = `
+      <div style="font-size:64px;margin-bottom:16px;">🎉</div>
+      <p style="font-size:11px;letter-spacing:.4em;color:var(--muted);margin-bottom:8px;">GAME OVER</p>
+      <p style="font-family:'Shippori Mincho',serif;font-size:28px;font-weight:700;color:#7ac07a;margin-bottom:20px;">村人陣営の勝利！</p>
+      <div style="background:rgba(74,138,74,.08);border:1px solid rgba(74,138,74,.3);border-radius:10px;padding:16px;max-width:300px;margin-bottom:24px;font-size:13px;color:var(--muted);line-height:1.8;">
+        全ての人狼を追放しました！<br><br>🐺 人狼：${wolfNames}
+      </div>`;
+  } else {
+    html = `
+      <div style="font-size:64px;margin-bottom:16px;">🐺</div>
+      <p style="font-size:11px;letter-spacing:.4em;color:var(--muted);margin-bottom:8px;">GAME OVER</p>
+      <p style="font-family:'Shippori Mincho',serif;font-size:28px;font-weight:700;color:#e08080;margin-bottom:20px;">人狼陣営の勝利！</p>
+      <div style="background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.3);border-radius:10px;padding:16px;max-width:300px;margin-bottom:24px;font-size:13px;color:var(--muted);line-height:1.8;">
+        村が人狼に支配されました…<br><br>🐺 人狼：${wolfNames}
+      </div>`;
+  }
+  content.innerHTML = html;
+  showScreen('victory');
+}
+
+// ─── BGM ────────────────────────────────────────────
+let bgmPhase = 'title';
+let bgmMuted = false;
+const BGM_TITLE_KEY = 'jinro_bgm_title';
+const BGM_DAY_KEY   = 'jinro_bgm_day';
+const BGM_VOTE_KEY  = 'jinro_bgm_vote';
+const BGM_NIGHT_KEY = 'jinro_bgm_night';
+// Default paths (served from same folder on GitHub Pages)
+const DEFAULT_TITLE = 'title.mp3';
+const DEFAULT_DAY   = 'day.mp3';
+const DEFAULT_VOTE  = 'vote.mp3';
+const DEFAULT_NIGHT = 'night.mp3';
+
+let audioUnlocked = false;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  // Silently play & pause all audio elements to unlock them
+  ['bgm-audio', 'bgm-title-audio', 'win-audio'].forEach(id => {
+    const a = document.getElementById(id);
+    a.play().then(() => { if (id !== 'bgm-title-audio') a.pause(); })
+    .catch(() => {});
+  });
+  playBgm('title');
+  document.removeEventListener('touchstart', unlockAudio);
+  document.removeEventListener('click', unlockAudio);
+}
+
+function initBgm() {
+  document.getElementById('bgm-audio').volume = 0.5;
+  document.getElementById('bgm-title-audio').volume = 0.5;
+  document.getElementById('win-audio').volume = 1.0;
+  // Wait for first user interaction to unlock audio
+  document.addEventListener('touchstart', unlockAudio, {once: true});
+  document.addEventListener('click', unlockAudio, {once: true});
+}
+
+function setBtn(id, text) {
+  const btn = document.getElementById(id);
+  if (btn) { btn.textContent = text; btn.classList.add('loaded'); }
+}
+
+function getSrc(phase) {
+  const keyMap   = {title: BGM_TITLE_KEY, day: BGM_DAY_KEY, vote: BGM_VOTE_KEY, night: BGM_NIGHT_KEY};
+  const defMap   = {title: DEFAULT_TITLE,  day: DEFAULT_DAY,  vote: DEFAULT_VOTE, night: DEFAULT_NIGHT};
+  return localStorage.getItem(keyMap[phase]) || defMap[phase];
+}
+
+function getAudio(phase) {
+  return phase === 'title'
+    ? document.getElementById('bgm-title-audio')
+    : document.getElementById('bgm-audio');
+}
+
+function playBgm(phase) {
+  // Stop all other audios
+  ['title','day','vote','night'].forEach(p => {
+    if (p !== phase) { const a = getAudio(p); a.pause(); a.currentTime = 0; }
+  });
+  bgmPhase = phase;
+  if (bgmMuted) return;
+  const audio = getAudio(phase);
+  const src   = getSrc(phase);
+  if (!src) return;
+  if (audio.getAttribute('data-src') !== src) {
+    audio.src = src;
+    audio.setAttribute('data-src', src);
+    audio.currentTime = 0;
+  }
+  audio.play().catch(() => {});
+}
+
+function stopBgm() {
+  ['bgm-audio','bgm-title-audio'].forEach(id => {
+    const a = document.getElementById(id); a.pause(); a.currentTime = 0;
+  });
+}
+
+window.addEventListener('load', initBgm);
+
+</script>
+
+  <div class="bgm-row">
+    <span style="font-size:11px;color:var(--muted);">音量</span>
+    <input type="range" class="bgm-vol-slider" id="bgm-vol" min="0" max="1" step="0.05" value="0.5"
+      oninput="setBgmVolume(this.value)">
+  </div>
+
+  <div class="bgm-row" style="justify-content:space-between;">
+    <button class="bgm-toggle" id="bgm-loop-btn" onclick="toggleBgmLoop()">🔁 ループON</button>
+    <button class="bgm-toggle" id="bgm-mute-btn" onclick="toggleBgmMute()">🔊 ON</button>
+  </div>
+</div>
+
+</body>
+</html>
